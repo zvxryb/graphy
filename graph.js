@@ -1,4 +1,3 @@
-
 /* vectors */
 
 function Vec3(x, y, z) {
@@ -97,26 +96,6 @@ function Complex(re, im) {
 }
 
 Complex.prototype.toString = function() {
-  /*
-  var epsilon = 0.000000001;
-  var str = ""
-  if (Math.abs(this.re) > epsilon) {
-    str += this.re.toString();
-  }
-  if (Math.abs(this.im) > epsilon) {
-    if (this.im < 0) {
-      str += "-";
-    } else if (Math.abs(this.re) > epsilon) {
-      str += "+";
-    }
-    str += "i";
-    var abs_im = Math.abs(this.im);
-    if (Math.abs(1.0 - abs_im) > epsilon) {
-      str += Math.abs(this.im).toString();
-    }
-  }
-  return str;
-  */
   var sign = this.im < 0.0 ? "-" : "+";
   return this.re.toPrecision(4) + sign + Math.abs(this.im).toPrecision(4) + "i";
 }
@@ -1031,7 +1010,7 @@ Plot3D.prototype.draw = function() {
   
   offs = 0;
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo_fill[this.level]);
-  for (var y = 0; y < level.w - 1; y++) {
+  for (var y = 0; y < level.h - 1; y++) {
     gl.drawElements(gl.TRIANGLE_STRIP, 2 * level.w, gl.UNSIGNED_SHORT, offs * 2);
     offs += 2 * level.w + 1;
   }
@@ -1043,7 +1022,7 @@ Plot3D.prototype.draw = function() {
   
   offs = 0;
   gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ebo_fill[this.level]);
-  for (var y = 0; y < level.w - 1; y++) {
+  for (var y = 0; y < level.h - 1; y++) {
     gl.drawElements(gl.TRIANGLE_STRIP, 2 * level.w, gl.UNSIGNED_SHORT, offs * 2);
     offs += 2 * level.w + 1;
   }
@@ -1623,18 +1602,42 @@ Plot3D.levels = [ /* line indexes for various LODs */
 
 /* test usage */
 
-function demo() {
+function graphy_demo(nodeId) {
   var plot = null;
   var mouse_down = false;
   var mouse_x = 0;
   var mouse_y = 0;
   var old_src = "";
-  
-  function init() {
-    var c  = document.getElementById('demo');
+  var console = document.createElement('div');
+  console.style.margin = '1em';
+
+  function init(node) {
+    var div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.flexDirection = 'column';
+    div.style.flexWrap = 'nowrap';
+    div.style.alignItems = 'stretch';
+
+    var input  = document.createElement('textarea');
+    var canvas = document.createElement('canvas');
+
+    input.style.margin = '1em';
+
+    canvas.width  = 640;
+    canvas.height = canvas.width * 9 / 16;
+    canvas.style.margin    = '1em';
+    canvas.style.alignSelf = 'center';
+
+    div.appendChild(canvas);
+    div.appendChild(input);
+    div.appendChild(console);
+
+    node.appendChild(div);
+
+    var c  = canvas;
     var w  = c.width;
     var h  = c.height;
-    var gl = c.getContext('experimental-webgl');
+    var gl = c.getContext('webgl');
     if (!gl) {
       alert('could not create webgl context!');
     }
@@ -1648,15 +1651,21 @@ function demo() {
     c.addEventListener('mousemove', mousemove);
     c.addEventListener('mouseup', mouseup);
 
-    var e = document.getElementById('input');
     input.addEventListener('keyup', keyup);
+
+    var example = 'u = 3 * pi * (x - 1/2); v = 3 * pi * (y - 1/2); (cos(abs(u + i * v)) + 1) / 2';
+    input.value = example;
+    update(example);
   }
-  
+
   function keyup(ev) {
-    var src = this.value;
+    update(this.value);
+  }
+
+  function update(src) {
     if (src == old_src) return;
     old_src = src;
-    
+
     var str = "";
     var context = new Context(src);
     if (context.err != null) {
@@ -1664,14 +1673,12 @@ function demo() {
     } else {
       str += "Interpreted as: ";
       str += context.toString();
-      //var result = context.array(-1.0, 1.0, -1.0, 1.0, 16);
-      //str += "[ " + result.join(", ") + " ]";
       plot.update(context);
       plot.draw();
     }
-    
-    var display = document.getElementById("token_display");
-    display.innerHTML = str;
+
+    while (console.hasChildNodes()) { console.removeChild(console.lastChild); }
+    console.appendChild(document.createTextNode(str));
   }
 
   function mousedown(ev) {
@@ -1705,5 +1712,5 @@ function demo() {
     plot.draw();
   }
 
-  init();
+  init(document.getElementById(nodeId));
 }
