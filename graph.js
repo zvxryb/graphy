@@ -1639,7 +1639,8 @@ function graphy_demo(nodeId) {
     var h  = c.height;
     var gl = c.getContext('webgl');
     if (!gl) {
-      alert('could not create webgl context!');
+      console.appendChild(document.createTextNode('Failed to get WebGL context!'));
+      return;
     }
 
     var bg = {r: 0.1, g: 0.1, b: 0.1};
